@@ -1,15 +1,19 @@
 const MAX_DISPLAY_LENGTH = 14;
+const OPERATORS = new Set(["+", "-", "×", "÷"]);
+const PRECEDENCE = {
+  "+": 1,
+  "-": 1,
+  "×": 2,
+  "÷": 2,
+};
 
 export function createCalculatorState() {
-  return {
+  return withDerivedFields({
+    tokens: [],
+    currentInput: "",
     display: "0",
-    firstOperand: null,
-    operator: null,
-    lastOperator: null,
-    lastOperand: null,
-    waitingForOperand: false,
     justEvaluated: false,
-  };
+  });
 }
 
 export function pressCalculatorKey(state, key) {
@@ -34,6 +38,9 @@ export function pressCalculatorKey(state, key) {
     case "×":
     case "÷":
       return chooseOperator(state, key);
+    case "(":
+    case ")":
+      return inputParenthesis(state, key);
     case "=":
     case "Enter":
       return evaluate(state);
@@ -43,150 +50,262 @@ export function pressCalculatorKey(state, key) {
 }
 
 function inputDigit(state, digit) {
-  if (state.waitingForOperand || state.justEvaluated) {
-    return {
-      ...state,
-      display: digit,
-      waitingForOperand: false,
-      justEvaluated: false,
-    };
+  const baseState = state.justEvaluated ? createCalculatorState() : state;
+  const currentInput = baseState.currentInput || "0";
+
+  if (currentInput.replace("-", "").replace(".", "").length >= MAX_DISPLAY_LENGTH) {
+    return baseState;
   }
 
-  if (state.display.replace("-", "").replace(".", "").length >= MAX_DISPLAY_LENGTH) {
-    return state;
-  }
-
-  return {
-    ...state,
-    display: state.display === "0" ? digit : `${state.display}${digit}`,
-  };
+  return withDerivedFields({
+    ...baseState,
+    currentInput: currentInput === "0" ? digit : `${currentInput}${digit}`,
+    justEvaluated: false,
+  });
 }
 
 function inputDecimal(state) {
-  if (state.waitingForOperand || state.justEvaluated) {
-    return {
-      ...state,
-      display: "0.",
-      waitingForOperand: false,
-      justEvaluated: false,
-    };
+  const baseState = state.justEvaluated ? createCalculatorState() : state;
+
+  if (baseState.currentInput.includes(".")) {
+    return baseState;
   }
 
-  if (state.display.includes(".")) {
-    return state;
-  }
-
-  return {
-    ...state,
-    display: `${state.display}.`,
-  };
+  return withDerivedFields({
+    ...baseState,
+    currentInput: baseState.currentInput ? `${baseState.currentInput}.` : "0.",
+    justEvaluated: false,
+  });
 }
 
 function backspace(state) {
-  if (state.waitingForOperand || state.justEvaluated || state.display.length === 1) {
-    return {
-      ...state,
-      display: "0",
-      justEvaluated: false,
-    };
+  if (state.justEvaluated) {
+    return createCalculatorState();
   }
 
-  if (state.display.length === 2 && state.display.startsWith("-")) {
-    return {
+  if (state.currentInput.length > 0) {
+    const nextInput = trimInput(state.currentInput.slice(0, -1));
+
+    return withDerivedFields({
       ...state,
-      display: "0",
-    };
+      currentInput: nextInput,
+    });
   }
 
-  const nextDisplay = state.display.slice(0, -1);
+  if (state.tokens.length > 0) {
+    return withDerivedFields({
+      ...state,
+      tokens: state.tokens.slice(0, -1),
+    });
+  }
 
-  return {
-    ...state,
-    display: nextDisplay.endsWith(".") ? nextDisplay.slice(0, -1) : nextDisplay,
-  };
+  return state;
 }
 
 function toggleSign(state) {
-  if (state.display === "0") {
+  if (state.currentInput === "" || state.currentInput === "0") {
     return state;
   }
 
-  return {
+  return withDerivedFields({
     ...state,
-    display: state.display.startsWith("-")
-      ? state.display.slice(1)
-      : `-${state.display}`,
-  };
+    currentInput: state.currentInput.startsWith("-")
+      ? state.currentInput.slice(1)
+      : `-${state.currentInput}`,
+  });
 }
 
 function applyPercent(state) {
-  return {
-    ...state,
-    display: formatNumber(parseDisplay(state.display) / 100),
-  };
-}
+  const currentInput = state.currentInput || state.display;
 
-function chooseOperator(state, nextOperator) {
-  const inputValue = parseDisplay(state.display);
-
-  if (state.operator && !state.waitingForOperand) {
-    const result = calculate(state.firstOperand, inputValue, state.operator);
-
-    return {
-      ...state,
-      display: formatNumber(result),
-      firstOperand: result,
-      operator: nextOperator,
-      lastOperator: state.operator,
-      lastOperand: inputValue,
-      waitingForOperand: true,
-      justEvaluated: false,
-    };
-  }
-
-  return {
-    ...state,
-    firstOperand: inputValue,
-    operator: nextOperator,
-    waitingForOperand: true,
-    justEvaluated: false,
-  };
-}
-
-function evaluate(state) {
-  if (!state.operator && state.lastOperator && state.lastOperand !== null) {
-    const repeatedResult = calculate(
-      parseDisplay(state.display),
-      state.lastOperand,
-      state.lastOperator,
-    );
-
-    return {
-      ...state,
-      display: formatNumber(repeatedResult),
-      firstOperand: repeatedResult,
-      waitingForOperand: true,
-      justEvaluated: true,
-    };
-  }
-
-  if (!state.operator || state.firstOperand === null) {
+  if (currentInput === "0") {
     return state;
   }
 
-  const secondOperand = parseDisplay(state.display);
-  const result = calculate(state.firstOperand, secondOperand, state.operator);
+  return withDerivedFields({
+    ...state,
+    currentInput: formatNumber(parseDisplay(currentInput) / 100),
+    justEvaluated: false,
+  });
+}
+
+function chooseOperator(state, nextOperator) {
+  const baseState = state.justEvaluated
+    ? {
+        ...createCalculatorState(),
+        tokens: [state.display],
+      }
+    : state;
+  const tokens = commitCurrentInput(baseState);
+  const lastToken = tokens.at(-1);
+
+  if (tokens.length === 0) {
+    return baseState;
+  }
+
+  const nextTokens = OPERATORS.has(lastToken)
+    ? [...tokens.slice(0, -1), nextOperator]
+    : [...tokens, nextOperator];
+
+  return withDerivedFields({
+    ...baseState,
+    tokens: nextTokens,
+    currentInput: "",
+    justEvaluated: false,
+  });
+}
+
+function inputParenthesis(state, parenthesis) {
+  const baseState = state.justEvaluated ? createCalculatorState() : state;
+
+  if (parenthesis === "(") {
+    const tokens = commitCurrentInput(baseState);
+    const lastToken = tokens.at(-1);
+
+    if (lastToken && !OPERATORS.has(lastToken) && lastToken !== "(") {
+      return baseState;
+    }
+
+    return withDerivedFields({
+      ...baseState,
+      tokens: [...tokens, "("],
+      currentInput: "",
+      justEvaluated: false,
+    });
+  }
+
+  const tokens = commitCurrentInput(baseState);
+  const lastToken = tokens.at(-1);
+
+  if (!lastToken || OPERATORS.has(lastToken) || lastToken === "(") {
+    return baseState;
+  }
+
+  const openCount = tokens.filter((token) => token === "(").length;
+  const closeCount = tokens.filter((token) => token === ")").length;
+
+  if (closeCount >= openCount) {
+    return baseState;
+  }
+
+  return withDerivedFields({
+    ...baseState,
+    tokens: [...tokens, ")"],
+    currentInput: "",
+    justEvaluated: false,
+  });
+}
+
+function evaluate(state) {
+  const tokens = commitCurrentInput(state);
+
+  if (tokens.length === 0) {
+    return state;
+  }
+
+  const closedTokens = closeOpenParentheses(tokens);
+  const result = evaluateExpression(closedTokens);
+
+  return withDerivedFields({
+    ...state,
+    tokens: [...closedTokens, "="],
+    currentInput: "",
+    display: formatNumber(result),
+    justEvaluated: true,
+  });
+}
+
+function commitCurrentInput(state) {
+  if (!state.currentInput) {
+    return [...state.tokens];
+  }
+
+  return [...state.tokens, trimInput(state.currentInput)];
+}
+
+function closeOpenParentheses(tokens) {
+  const openCount = tokens.filter((token) => token === "(").length;
+  const closeCount = tokens.filter((token) => token === ")").length;
+
+  if (openCount <= closeCount) {
+    return [...tokens];
+  }
+
+  return [...tokens, ...Array(openCount - closeCount).fill(")")];
+}
+
+function withDerivedFields(state) {
+  const expressionTokens = commitCurrentInput(state);
+  const display = state.justEvaluated || state.display === "Error"
+    ? state.display
+    : state.currentInput || latestDisplayValue(state.tokens) || state.display || "0";
 
   return {
     ...state,
-    display: formatNumber(result),
-    firstOperand: result,
-    operator: null,
-    lastOperator: state.operator,
-    lastOperand: secondOperand,
-    waitingForOperand: true,
-    justEvaluated: true,
+    expressionText: expressionTokens.join(" "),
+    display,
   };
+}
+
+function latestDisplayValue(tokens) {
+  for (let index = tokens.length - 1; index >= 0; index -= 1) {
+    const token = tokens[index];
+
+    if (isNumberToken(token)) {
+      return token;
+    }
+  }
+
+  return "0";
+}
+
+function evaluateExpression(tokens) {
+  const values = [];
+  const operators = [];
+
+  for (const token of tokens) {
+    if (isNumberToken(token)) {
+      values.push(parseDisplay(token));
+      continue;
+    }
+
+    if (token === "(") {
+      operators.push(token);
+      continue;
+    }
+
+    if (token === ")") {
+      while (operators.length > 0 && operators.at(-1) !== "(") {
+        applyOperator(values, operators.pop());
+      }
+      operators.pop();
+      continue;
+    }
+
+    if (OPERATORS.has(token)) {
+      while (
+        operators.length > 0
+        && OPERATORS.has(operators.at(-1))
+        && PRECEDENCE[operators.at(-1)] >= PRECEDENCE[token]
+      ) {
+        applyOperator(values, operators.pop());
+      }
+      operators.push(token);
+    }
+  }
+
+  while (operators.length > 0) {
+    applyOperator(values, operators.pop());
+  }
+
+  return values.length === 1 ? values[0] : Number.NaN;
+}
+
+function applyOperator(values, operator) {
+  const secondOperand = values.pop();
+  const firstOperand = values.pop();
+
+  values.push(calculate(firstOperand, secondOperand, operator));
 }
 
 function calculate(firstOperand, secondOperand, operator) {
@@ -204,8 +323,20 @@ function calculate(firstOperand, secondOperand, operator) {
   }
 }
 
+function isNumberToken(token) {
+  return token !== undefined && token !== "" && Number.isFinite(Number(token));
+}
+
 function parseDisplay(display) {
   return Number(display);
+}
+
+function trimInput(input) {
+  if (input === "" || input === "-") {
+    return "";
+  }
+
+  return input.endsWith(".") ? input.slice(0, -1) : input;
 }
 
 function formatNumber(value) {

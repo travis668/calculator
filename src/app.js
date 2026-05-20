@@ -4,12 +4,14 @@ import {
 } from "./calculator-core.js";
 
 const display = document.querySelector("[data-display]");
+const expression = document.querySelector("[data-expression]");
 const statusText = document.querySelector("[data-status]");
 const keys = document.querySelectorAll("[data-key]");
 
 let state = createCalculatorState();
 
 function render() {
+  expression.textContent = state.expressionText;
   display.textContent = state.display;
   display.dataset.error = state.display === "Error" ? "true" : "false";
 }
@@ -43,7 +45,7 @@ document.addEventListener("keydown", (event) => {
 
   const mappedKey = keyMap[event.key] ?? event.key;
 
-  if (/^\d$/.test(mappedKey) || [".", "+", "-", "×", "÷", "%", "=", "⌫", "C"].includes(mappedKey)) {
+  if (/^\d$/.test(mappedKey) || [".", "+", "-", "×", "÷", "%", "=", "⌫", "C", "(", ")"].includes(mappedKey)) {
     event.preventDefault();
     press(mappedKey);
   }

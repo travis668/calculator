@@ -79,14 +79,32 @@ button {
   text-align: right;
 }
 
-.display {
+.display-panel {
   width: 100%;
   min-height: 6rem;
-  display: flex;
-  align-items: end;
-  justify-content: end;
+  display: grid;
+  align-content: end;
+  gap: 0.5rem;
   overflow: hidden;
   padding: 0.75rem 0.25rem 0.5rem;
+}
+
+.expression {
+  min-height: 1.25rem;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.display {
+  width: 100%;
+  display: block;
+  overflow: hidden;
   color: var(--text);
   font-size: clamp(2.6rem, 12vw, 4.5rem);
   font-variant-numeric: tabular-nums;
@@ -122,6 +140,16 @@ button {
     background-color 120ms ease,
     transform 120ms ease,
     box-shadow 120ms ease;
+}
+
+.key-zero {
+  grid-column: span 2;
+  aspect-ratio: auto;
+}
+
+.key-equals {
+  grid-row: span 2;
+  aspect-ratio: auto;
 }
 
 .key:hover {
