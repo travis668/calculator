@@ -1,4 +1,4 @@
-const CACHE_NAME = "offline-calculator-v3";
+const CACHE_NAME = "offline-calculator-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,9 @@ const APP_SHELL = [
   "./src/calculator-core.js",
   "./src/styles.css",
 ];
+const APP_SHELL_URLS = new Set(
+  APP_SHELL.map((path) => new URL(path, self.registration.scope).href),
+);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -36,6 +39,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (!APP_SHELL_URLS.has(event.request.url)) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -45,7 +52,7 @@ self.addEventListener("fetch", (event) => {
       return fetch(event.request).then((networkResponse) => {
         const responseCopy = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseCopy);
+          cache.put(event.request.url, responseCopy);
         });
         return networkResponse;
       });
