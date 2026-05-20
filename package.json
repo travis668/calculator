@@ -1,0 +1,10 @@
+{
+  "name": "offline-calculator-pwa",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "serve": "python3 -m http.server 4173"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "離線計算機",
+  "short_name": "計算機",
+  "description": "第一次連線後即可離線使用的 PWA 計算機",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#171717",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
