@@ -1,9 +1,12 @@
-const CACHE_NAME = "offline-calculator-v4";
+const CACHE_NAME = "offline-calculator-v5";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icons/icon.svg",
+  "./icons/icon-512.png",
+  "./icons/apple-touch-icon.png",
+  "./icons/startup.png",
   "./src/app.js",
   "./src/calculator-core.js",
   "./src/styles.css",
