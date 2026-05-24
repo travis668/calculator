@@ -4,7 +4,15 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "dev": "vite",
+    "build": "vite build && npm run analyze:size",
+    "postbuild": "node scripts/copy-static.mjs",
+    "analyze:size": "node scripts/report-size.mjs",
+    "preview": "vite preview",
     "test": "node --test test/*.test.mjs",
     "serve": "python3 -m http.server 4173"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
   }
 }

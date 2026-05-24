@@ -12,6 +12,7 @@ const historyStatus = document.querySelector("[data-history-status]");
 const historyClear = document.querySelector("[data-history-clear]");
 const historyToggle = document.querySelector("[data-history-toggle]");
 const historyClose = document.querySelector("[data-history-close]");
+const historyBackdrop = document.querySelector("[data-history-backdrop]");
 const historySidebar = document.querySelector("#history-sidebar");
 
 const MAX_HISTORY = 20;
@@ -163,6 +164,10 @@ historyToggle.addEventListener("click", () => {
 });
 
 historyClose.addEventListener("click", () => {
+  setHistoryOpen(false);
+});
+
+historyBackdrop.addEventListener("click", () => {
   setHistoryOpen(false);
 });
 

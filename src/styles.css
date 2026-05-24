@@ -210,37 +210,56 @@ button {
   background: var(--accent-pressed);
 }
 
-.history-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.45rem;
-}
-
-.history-title,
 .history-hint {
   margin: 0;
 }
 
-.history-title {
-  font-size: 0.9rem;
-  font-weight: 650;
-  white-space: nowrap;
-}
-
-.history-actions {
+.history-banner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.45rem;
+  gap: 0.55rem;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid #3b3833;
+  border-radius: 0.7rem;
+  background: linear-gradient(180deg, #2f2b26, #27231f);
+}
+
+.history-banner-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.history-banner-text {
+  min-width: 0;
+}
+
+.history-banner-title,
+.history-banner-subtitle {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.history-banner-title {
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: #ffd38a;
+}
+
+.history-banner-subtitle {
+  color: #efe5d6;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .history-hint {
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-height: 1rem;
 }
 
 .history-close,
@@ -327,9 +346,12 @@ button {
   max-height: none;
   min-height: 0;
   display: grid;
-  grid-template-rows: auto auto 1fr;
-  gap: 0.4rem;
-  padding: 0.75rem;
+  grid-template-rows: auto auto auto 1fr;
+  gap: 0.5rem;
+  padding-top: max(1rem, calc(env(safe-area-inset-top) + 0.75rem));
+  padding-right: max(0.75rem, calc(env(safe-area-inset-right) + 0.75rem));
+  padding-bottom: max(0.75rem, calc(env(safe-area-inset-bottom) + 0.5rem));
+  padding-left: 0.75rem;
   border: 1px solid var(--border);
   border-radius: 0;
   border-right: 0;
@@ -342,6 +364,44 @@ button {
   z-index: 30;
 }
 
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.history-clear-inline {
+  padding: 0.16rem 0.32rem;
+  border-radius: 0.38rem;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.73rem;
+}
+
+.history-clear-inline:hover {
+  background: #333333;
+  color: var(--text);
+}
+
 body[data-history-open="true"] .history-sidebar {
   transform: translateX(0);
+}
+
+.history-backdrop {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: rgb(0 0 0 / 35%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+  z-index: 20;
+}
+
+body[data-history-open="true"] .history-backdrop {
+  opacity: 1;
+  pointer-events: auto;
 }

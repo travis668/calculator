@@ -64,15 +64,21 @@
 
       </section>
 
+      <button class="history-backdrop" type="button" data-history-backdrop aria-label="關閉歷史記錄"></button>
+
       <aside class="history-sidebar" id="history-sidebar" aria-label="歷史記錄" aria-hidden="true">
+        <div class="history-banner" aria-hidden="true">
+          <span class="history-banner-icon">🕘</span>
+          <div class="history-banner-text">
+            <p class="history-banner-title">歷史記錄</p>
+            <p class="history-banner-subtitle">點算式可載入，點結果可帶回計算</p>
+          </div>
+        </div>
         <div class="history-header">
-          <p class="history-title">歷史記錄</p>
-          <button class="history-close" type="button" data-history-close>關閉</button>
+          <button class="history-clear history-clear-inline" type="button" data-history-clear>🗑 清除</button>
+          <button class="history-close" type="button" data-history-close>返回</button>
         </div>
-        <div class="history-actions">
-          <p class="history-hint" data-history-status>點算式可載入，點結果可帶回計算</p>
-          <button class="history-clear" type="button" data-history-clear>清除</button>
-        </div>
+        <p class="history-hint" data-history-status></p>
         <ul class="history-list" data-history-list></ul>
       </aside>
     </main>
