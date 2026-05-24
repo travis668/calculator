@@ -345,11 +345,57 @@ function formatNumber(value) {
   }
 
   const rounded = Number.parseFloat(value.toPrecision(MAX_DISPLAY_LENGTH));
-  const formatted = String(rounded);
+  const plain = exponentialToPlainString(rounded);
 
-  if (formatted.length <= MAX_DISPLAY_LENGTH) {
-    return formatted;
+  if (plain.length <= MAX_DISPLAY_LENGTH) {
+    return plain;
   }
 
-  return rounded.toExponential(7);
+  const sign = rounded < 0 ? "-" : "";
+  const absolute = Math.abs(rounded);
+  const integerPart = Math.trunc(absolute).toString();
+
+  if (sign.length + integerPart.length >= MAX_DISPLAY_LENGTH) {
+    return `${sign}${integerPart.slice(0, MAX_DISPLAY_LENGTH - sign.length)}`;
+  }
+
+  const maxFractionDigits = Math.max(
+    0,
+    MAX_DISPLAY_LENGTH - sign.length - integerPart.length - 1,
+  );
+
+  const fixed = absolute.toFixed(maxFractionDigits);
+  const trimmed = fixed.replace(/\.?0+$/, "");
+
+  return `${sign}${trimmed}`;
+}
+
+function exponentialToPlainString(value) {
+  const raw = String(value);
+
+  if (!/[eE]/.test(raw)) {
+    return raw;
+  }
+
+  const [coefficient, exponentText] = raw.split(/[eE]/);
+  const exponent = Number.parseInt(exponentText, 10);
+  const isNegative = coefficient.startsWith("-");
+  const digits = coefficient.replace("-", "").replace(".", "");
+  const decimalIndex = coefficient.replace("-", "").indexOf(".");
+  const baseIndex = decimalIndex === -1 ? digits.length : decimalIndex;
+  const shiftedIndex = baseIndex + exponent;
+
+  let normalized;
+  if (shiftedIndex <= 0) {
+    normalized = `0.${"0".repeat(Math.abs(shiftedIndex))}${digits}`;
+  } else if (shiftedIndex >= digits.length) {
+    normalized = `${digits}${"0".repeat(shiftedIndex - digits.length)}`;
+  } else {
+    normalized = `${digits.slice(0, shiftedIndex)}.${digits.slice(shiftedIndex)}`;
+  }
+
+  const stripped = normalized.replace(/^0+(?=\d)/, "").replace(/\.?0+$/, "");
+  const safe = stripped === "" ? "0" : stripped;
+
+  return isNegative ? `-${safe}` : safe;
 }

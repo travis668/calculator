@@ -21,7 +21,10 @@
       <section class="calculator" aria-label="計算機">
         <header class="topbar">
           <p class="app-title">離線計算機</p>
-          <p class="status" data-status>可離線使用</p>
+          <div class="topbar-right">
+            <p class="status" data-status>可離線使用</p>
+            <button class="history-toggle" type="button" data-history-toggle aria-expanded="false" aria-controls="history-sidebar">歷史</button>
+          </div>
         </header>
 
         <div class="display-panel" aria-live="polite">
@@ -58,7 +61,20 @@
           <button class="key key-zero" type="button" data-key="0">0</button>
           <button class="key" type="button" data-key=".">.</button>
         </div>
+
       </section>
+
+      <aside class="history-sidebar" id="history-sidebar" aria-label="歷史記錄" aria-hidden="true">
+        <div class="history-header">
+          <p class="history-title">歷史記錄</p>
+          <button class="history-close" type="button" data-history-close>關閉</button>
+        </div>
+        <div class="history-actions">
+          <p class="history-hint" data-history-status>點算式可載入，點結果可帶回計算</p>
+          <button class="history-clear" type="button" data-history-clear>清除</button>
+        </div>
+        <ul class="history-list" data-history-list></ul>
+      </aside>
     </main>
   </body>
 </html>
