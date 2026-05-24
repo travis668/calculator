@@ -67,7 +67,7 @@ function maybeRecordHistory(previousState, nextState, key) {
 function renderHistory() {
   historyList.textContent = "";
 
-  for (const item of historyEntries) {
+  historyEntries.forEach((item, index) => {
     const row = document.createElement("li");
     row.className = "history-item";
 
@@ -87,9 +87,24 @@ function renderHistory() {
       applyResult(item.result);
     });
 
-    row.append(expressionButton, resultButton);
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "history-delete";
+    deleteButton.setAttribute("aria-label", "刪除此筆歷史");
+    deleteButton.textContent = "✕";
+    deleteButton.addEventListener("click", () => {
+      deleteHistoryEntry(index);
+    });
+
+    row.append(expressionButton, resultButton, deleteButton);
     historyList.append(row);
-  }
+  });
+}
+
+function deleteHistoryEntry(index) {
+  historyEntries = historyEntries.filter((_, entryIndex) => entryIndex !== index);
+  saveHistory();
+  renderHistory();
 }
 
 function applyExpression(expressionText) {
@@ -155,7 +170,7 @@ keys.forEach((button) => {
 historyClear.addEventListener("click", () => {
   historyEntries = [];
   saveHistory();
-  historyStatus.textContent = "點算式可載入，點結果可帶回計算";
+  historyStatus.textContent = "";
   renderHistory();
 });
 
